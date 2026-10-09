@@ -1,0 +1,442 @@
+{
+  "name": "1-PlacidWay Knowledge Chatbot (N8N+SUPABASE+CHATWOOT)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatwoot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        48
+      ],
+      "id": "19c8ddd3-0a93-43a7-b52a-fcdbb8ca9a82",
+      "name": "Webhook",
+      "webhookId": "0e7cc510-6cf6-41a1-a803-7ce0015ead15"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "94fddbae-4532-4c8d-b1a4-16cd7ae4b8a7",
+              "name": "account_id",
+              "value": "={{ $json.body.conversation.messages[0].account_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6b2faa27-e629-4c51-ae85-25eb732f2f81",
+              "name": "conversation_id",
+              "value": "={{ $json.body.conversation.messages[0].conversation_id }}",
+              "type": "number"
+            },
+            {
+              "id": "3b7e40e5-9777-41d5-9cd5-2157981d9d54",
+              "name": "message_type",
+              "value": "={{ $json.body.message_type }}",
+              "type": "string"
+            },
+            {
+              "id": "c1a69faa-95c0-4932-9512-a8875728c956",
+              "name": "username",
+              "value": "={{ $json.body.conversation.meta.sender.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e6f5cda6-f431-4cb8-a882-3e931bf95d8b",
+              "name": "phonenumber",
+              "value": "={{ $json.body.conversation.meta.sender.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "6c33ff43-7089-4040-a090-bfbf98e103d4",
+              "name": "user_message",
+              "value": "={{ $json.body.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        304,
+        48
+      ],
+      "id": "98ae4c41-4a66-4c04-ab26-f17aa5ae3113",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=username:{{ $json.username }}\nmessage: {{ $json.user_message }}",
+        "options": {
+          "systemMessage": "# Style and length (strict)\n\n- Answer in 1–3 short sentences or at most 3 bullets. Maximum ~60 words before the source line.\n- Lead with the direct answer (the number, yes/no, or the fact). Nothing before it.\n- Include only what the user asked. Do not add related facts, extra programs, background, or \"also available\" items unless asked.\n- One price per question unless the user asked for several or for a comparison. If several clinics match, give the single most relevant one and add \"Other options available, ask if you want them.\"\n- State dates only when the user asks, or when the price is clearly dated and that changes the answer. Never repeat \"last modified\" per line.\n- Never describe the retrieval process or its gaps (\"no URL was included\", \"I found both...\"). If a source link is missing, just omit the link.\n- Do not repeat the \"prices are provider estimates\" note more than once per conversation.\n- Do not offer lead capture, quotes or extra help unless the user asks for a quote, wants to proceed, or you cannot do what they asked.\n- No intro phrases (\"According to...\", \"I found...\"), no closing questions, no filler, no emojis.\n- End with one line: \"Source: <title> - <url>\".\n- Longer answers are allowed only when the user asks for detail, a full list of inclusions, or a comparison.\n\nGood example:\nUser: How much does adenocarcinoma treatment cost in Tijuana?\nYou: \"$18,995 USD for the 3-week Out-Patient program ($30,000 for In-Patient).\nSource: Alternative Adenocarcinoma Cancer Treatment Package in Tijuana by ITC - https://www.placidway.com/package/7903/...\"\n\nGood example:\nUser: How much does ozone therapy cost in Turkey?\nYou: \"$110 at Fizikon Medical Center, Konya (starting price).\nSource: Alternative Medicine Cost Abroad - https://www.placidway.com/search-medical-pricings/Alternative-Medicine/All/1\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        768,
+        32
+      ],
+      "id": "fea2ea3e-96e9-4ae1-bb2e-2ebc4f832f78",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message_type }}",
+                    "rightValue": "incoming",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "73df6949-08ed-48c7-874c-d18245dc01e0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "incoming"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8a8419c4-15c4-4573-92f0-7be72943ce73",
+                    "leftValue": "={{ $json.message_type }}",
+                    "rightValue": "outcoming",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        48
+      ],
+      "id": "600533d5-c3b2-4a70-86a6-d32d50d6ab08",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        256
+      ],
+      "id": "ad23e130-fad1-483d-afee-1cb567e91859",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1Ab0uXxisZR7K3Ic",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n-chatwoot.iyd7xz.easypanel.host/api/v1/accounts/\n{{ $('Switch').item.json.account_id }}/conversations/{{ $('Switch').item.json.conversation_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "H7BUuevdYNK4EyYscbCkd5Qo"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $('AI Agent').item.json.output }}"
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            },
+            {
+              "name": "private",
+              "value": "false"
+            },
+            {
+              "name": "content_type",
+              "value": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50b409c1-df1b-4df7-a53b-cd03b09121ad",
+      "name": "Send Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1328,
+        32
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.phonenumber }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        816,
+        256
+      ],
+      "id": "366acccd-be41-4bc4-b9d9-d6693bb2a83f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "xnZ8VSQy3DsbCaRh",
+          "name": "simple setup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into whatsapp_users (phone_number, last_message_at)\nvalues ('{{ $json.body.conversation.contact_inbox.source_id }}', now())\non conflict (phone_number)\ndo update set last_message_at = now();",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        48,
+        256
+      ],
+      "id": "ba3b7f62-73bc-43cb-80c2-4afe3bdf12f9",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "xnZ8VSQy3DsbCaRh",
+          "name": "simple setup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "please answers questions based on user queries",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        256
+      ],
+      "id": "9547d1c0-fd40-4cd4-a09f-d7d8ed0b65aa",
+      "name": "Supabase Vector Store2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "b0JBs9LjYBXcsq9M",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        432
+      ],
+      "id": "594eb0ab-988b-4e65-b0b7-1b9e15fd0997",
+      "name": "Embeddings1",
+      "credentials": {
+        "openAiApi": {
+          "id": "1Ab0uXxisZR7K3Ic",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## FOR MANAGING 24H WINDOW ",
+        "height": 192,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "a317b38f-8f20-41f2-a57f-d73d09b42f7d",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Embeddings1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f213bd31-adda-4a92-ae7a-a3bf294c8c48",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66b341567f2e43e4ef19ce05374d0ebf8bf731cf74e5c9c970a601940c50b43c"
+  },
+  "nodeGroups": [],
+  "id": "6ouZLW8vSIgg8FeX",
+  "tags": []
+}
